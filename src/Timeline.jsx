@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import { assignLanes } from "./assignLanes";
+import { hexToRgba } from "./ThemeSelector";
 
 const LANE_HEIGHT = 40;
 const LANE_GAP = 8;
@@ -11,10 +12,6 @@ const MAX_VISIBLE_DAYS = 1500;
 const ZOOM_STEP = 1.15;
 const EDGE_ZONE = 8;
 
-const COLORS = [
-  "#4299e1", "#48bb78", "#ed8936", "#9f7aea",
-  "#f56565", "#38b2ac", "#ed64a6", "#ecc94b",
-];
 
 function getDragCursor(e, itemEl) {
   if (!itemEl) return "grab";
@@ -29,7 +26,7 @@ function daysToPx(days, totalDays, timelineWidth) {
   return (days / totalDays) * timelineWidth;
 }
 
-function Timeline({ items, onItemUpdate }) {
+function Timeline({ items, onItemUpdate, onItemDelete, theme = "default", colors }) {
   const scrollRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [visibleDays, setVisibleDays] = useState(DEFAULT_VISIBLE_DAYS);
@@ -268,7 +265,11 @@ function Timeline({ items, onItemUpdate }) {
                   className={`timeline-item${drag?.itemId === item.id ? " dragging" : ""}`}
                   style={{
                     ...getItemStyle(item),
-                    backgroundColor: COLORS[item.id % COLORS.length],
+                    backgroundColor: (() => {
+                      const ci = item.colorIndex != null ? item.colorIndex : item.id % colors.length;
+                      const color = colors[ci % colors.length];
+                      return theme === "glass" ? hexToRgba(color, 0.35) : color;
+                    })(),
                   }}
                   title={editingId === item.id ? undefined : `${item.name}\n${item.start} → ${item.end}`}
                   onPointerDown={(e) => handlePointerDown(e, item)}
@@ -288,7 +289,20 @@ function Timeline({ items, onItemUpdate }) {
                       autoFocus
                     />
                   ) : (
-                    <span className="timeline-item-name">{item.name}</span>
+                    <>
+                      <span className="timeline-item-name">{item.name}</span>
+                      <button
+                        className="timeline-item-delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onItemDelete(item.id);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        title="Remove event"
+                      >
+                        &times;
+                      </button>
+                    </>
                   )}
                 </div>
               ))}
