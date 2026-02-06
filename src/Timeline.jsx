@@ -1,7 +1,8 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import { assignLanes } from "./assignLanes";
-import { hexToRgba } from "./ThemeSelector";
+import { colorForItem } from "./utils/color.js";
+import EventCard from "./components/EventCard.jsx";
 
 const LANE_HEIGHT = 40;
 const LANE_GAP = 8;
@@ -95,7 +96,7 @@ function Timeline({ items, onItemUpdate, onItemDelete, theme = "default", colors
     [minDate, maxDate, totalDays, timelineWidth]
   );
 
-  // --- Zoom via Ctrl+Wheel ---
+ 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -129,7 +130,7 @@ function Timeline({ items, onItemUpdate, onItemDelete, theme = "default", colors
     );
   };
 
-  // --- Drag helpers ---
+ 
   const pxToDay = useCallback(
     (px) => Math.round(px / dayWidth),
     [dayWidth]
@@ -195,7 +196,7 @@ function Timeline({ items, onItemUpdate, onItemDelete, theme = "default", colors
     setDrag(null);
   }, []);
 
-  // --- Inline editing ---
+ 
   const handleDoubleClick = useCallback((e, item) => {
     e.stopPropagation();
     setEditingId(item.id);
@@ -250,62 +251,38 @@ function Timeline({ items, onItemUpdate, onItemDelete, theme = "default", colors
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {lanes.map((lane, laneIndex) => (
-            <div
-              key={laneIndex}
-              className="timeline-lane"
-              style={{
-                top: laneIndex * (LANE_HEIGHT + LANE_GAP) + LANE_GAP,
-                height: LANE_HEIGHT,
-              }}
-            >
-              {lane.map((item) => (
+              {lanes.map((lane, laneIndex) => (
                 <div
-                  key={item.id}
-                  className={`timeline-item${drag?.itemId === item.id ? " dragging" : ""}`}
+                  key={laneIndex}
+                  className="timeline-lane"
                   style={{
-                    ...getItemStyle(item),
-                    backgroundColor: (() => {
-                      const ci = item.colorIndex != null ? item.colorIndex : item.id % colors.length;
-                      const color = colors[ci % colors.length];
-                      return theme === "glass" ? hexToRgba(color, 0.35) : color;
-                    })(),
-                  }}
-                  title={editingId === item.id ? undefined : `${item.name}\n${item.start} → ${item.end}`}
-                  onPointerDown={(e) => handlePointerDown(e, item)}
-                  onDoubleClick={(e) => handleDoubleClick(e, item)}
-                  onPointerMoveCapture={(e) => {
-                    e.currentTarget.style.cursor = getDragCursor(e, e.currentTarget);
+                    top: laneIndex * (LANE_HEIGHT + LANE_GAP) + LANE_GAP,
+                    height: LANE_HEIGHT,
                   }}
                 >
-                  {editingId === item.id ? (
-                    <input
-                      className="timeline-item-input"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={commitEdit}
-                      onKeyDown={handleEditKeyDown}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      autoFocus
-                    />
-                  ) : (
-                    <>
-                      <span className="timeline-item-name">{item.name}</span>
-                      <button
-                        className="timeline-item-delete"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onItemDelete(item.id);
-                        }}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        title="Remove event"
-                      >
-                        &times;
-                      </button>
-                    </>
-                  )}
-                </div>
-              ))}
+              {lane.map((item) => {
+                const color = colorForItem(item, colors, theme);
+                const style = { ...getItemStyle(item), backgroundColor: color };
+                const isEditing = editingId === item.id;
+                return (
+                  <EventCard
+                    key={item.id}
+                    item={item}
+                    style={style}
+                    color={color}
+                    editing={isEditing}
+                    editValue={editValue}
+                    onChangeEdit={setEditValue}
+                    onCommitEdit={commitEdit}
+                    onPointerDown={(e) => handlePointerDown(e, item)}
+                    onDoubleClick={(e) => handleDoubleClick(e, item)}
+                    onDelete={() => onItemDelete(item.id)}
+                    onPointerMoveCapture={(e) => {
+                      e.currentTarget.style.cursor = getDragCursor(e, e.currentTarget);
+                    }}
+                  />
+                );
+              })}
             </div>
           ))}
         </div>

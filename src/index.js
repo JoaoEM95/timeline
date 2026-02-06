@@ -1,17 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ReactDOM from "react-dom/client";
 import timelineItems from "./timelineItems.js";
 import Timeline from "./Timeline.jsx";
-import ThemeSelector, { THEME_COLORS } from "./ThemeSelector.jsx";
+import ThemeSelector from "./ThemeSelector.jsx";
 import AddEventModal from "./AddEventModal.jsx";
+import { ThemeProvider, useTheme } from "./context/ThemeContext.js";
+import { THEME_COLORS } from "./data/themeColors.js";
 
-function App() {
+
+function AppContent() {
+  const { theme, setTheme } = useTheme();
   const [items, setItems] = useState(timelineItems);
-  const [theme, setTheme] = useState("default");
   const [showAddModal, setShowAddModal] = useState(false);
 
-  useEffect(() => {
-  }, [theme]);
+  
 
   const handleItemUpdate = (id, changes) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
@@ -51,5 +53,13 @@ function App() {
   );
 }
 
+function AppWrapper() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+root.render(<AppWrapper />);
