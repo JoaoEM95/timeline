@@ -1,15 +1,22 @@
 import { useState } from "react";
+import dayjs from "dayjs";
 
 function AddEventModal({ colors, onAdd, onClose }) {
   const [name, setName] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [colorIndex, setColorIndex] = useState(0);
+  const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim() || !start || !end) return;
+    if (dayjs(start).isAfter(dayjs(end))) {
+      setError("A data inicial não pode ser maior que a data final");
+      return;
+    }
     onAdd({ name: name.trim(), start, end, colorIndex });
+    setError("");
     onClose();
   };
 
@@ -66,6 +73,9 @@ function AddEventModal({ colors, onAdd, onClose }) {
               ))}
             </div>
           </label>
+          {error && (
+            <div className="modal-error" role="alert">{error}</div>
+          )}
           <button
             type="submit"
             className="modal-submit"

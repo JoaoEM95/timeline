@@ -23,6 +23,7 @@ function EventCard({ item, style, color, editing, editValue, onPointerDown, onDo
           <button
             className="timeline-item-delete"
             aria-label="Remove event"
+            title="Remove event"
             onClick={(e) => {
               e.stopPropagation();
               onDelete?.();
