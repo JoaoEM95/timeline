@@ -95,6 +95,12 @@ const timelineItems = [
     end: "2021-05-01",
     name: "Launch day",
   },
+      {
+    id: 17,
+    start: "2026-02-05",
+    end: "2026-02-10",
+    name: "Hire João Emanuel",
+  },
 ];
 
 export default timelineItems;
